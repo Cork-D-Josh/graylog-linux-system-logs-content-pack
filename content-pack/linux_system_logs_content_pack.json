@@ -1,0 +1,5414 @@
+{
+  "v": 1,
+  "id": "07dc596d-dce6-4f01-9c27-f72f57991973",
+  "rev": 1,
+  "name": "Linux System Logs",
+  "summary": "Open-source content pack for parsing, normalizing, and enriching Linux system logs.",
+  "description": "",
+  "vendor": "Joshua Ribes",
+  "url": "https://github.com/Cork-D-Josh/graylog-linux-system-logs-content-pack",
+  "parameters": [],
+  "entities": [
+    {
+      "v": "1",
+      "type": {
+        "name": "stream",
+        "version": "1"
+      },
+      "id": "e294c20c-2e62-4960-b4fd-b77ac1cd0087",
+      "data": {
+        "alarm_callbacks": [],
+        "outputs": [],
+        "remove_matches": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "title": {
+          "@type": "string",
+          "@value": "Linux System Stream"
+        },
+        "stream_rules": [
+          {
+            "type": {
+              "@type": "string",
+              "@value": "MATCH_INPUT"
+            },
+            "field": {
+              "@type": "string",
+              "@value": ""
+            },
+            "value": {
+              "@type": "string",
+              "@value": "6981e0670c48e4ac3fb24e4c"
+            },
+            "inverted": {
+              "@type": "boolean",
+              "@value": false
+            },
+            "description": {
+              "@type": "string",
+              "@value": ""
+            }
+          }
+        ],
+        "alert_conditions": [],
+        "matching_type": {
+          "@type": "string",
+          "@value": "AND"
+        },
+        "disabled": {
+          "@type": "boolean",
+          "@value": false
+        },
+        "description": {
+          "@type": "string",
+          "@value": "Stream containing all system events from Linux servers"
+        },
+        "default_stream": {
+          "@type": "boolean",
+          "@value": false
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "cb94a5c5-37a6-4429-92cd-591f85be9930",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "sudo_event_outcome"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"sudo_event_outcome\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"sudo\" &&\n    has_field(\"process_command_line\")\nthen\n    let has_error = has_field(\"vendor_sudo_error\");\n    let outcomes = key_value(\"true=failure false=success\");\n    set_field(\"event_outcome\", to_string(outcomes.to_string(has_error)));\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "ab6e47a4-639c-4d1b-adf0-645b663d2c45",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "pam_extract_fields"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"pam_extract_fields\"\nwhen\n    regex(\"^pam_[a-z0-9_]+\\\\(\", to_string($message.message)).matches == true\nthen\n    let fields = grok(\"^%{DATA:vendor_pam_module}\\\\(%{DATA:vendor_pam_service_name}:%{DATA:vendor_pam_function}\\\\)\\\\s*:\\\\s*%{GREEDYDATA:message}$\",\n    to_string($message.message));\n    set_fields(fields);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "c5891234-74a7-4e3c-9190-e0cfb41d5ff6",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "ssh_vendor_credential_type"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"ssh_vendor_credential_type\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"sshd\" &&\n    has_field(\"vendor_event_description\")\nthen\n    let field = regex(\"^(Accepted|Failed)\\\\s+(password|publickey)$\",\n    to_string($message.vendor_event_description));\n    set_field(\"vendor_credential_type\", field[\"1\"]);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "7a309eb7-8737-436d-8749-4ea0846e019c",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "ssh_access_control"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"ssh_access_control\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"sshd\"\nthen\n    let fields = grok(\"^User\\\\s+%{USERNAME:user_name}\\\\s+from\\\\s+%{DATA:source_ip}\\\\s+%{DATA:vendor_event_outcome}\\\\s+because\\\\s+%{DATA:vendor_event_outcome_reason}$\",\n    to_string($message.message));\n    set_fields(fields);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "198d48a5-8eea-4ade-b70a-eb09755fb755",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "chfn_user_information_changed"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"chfn_user_information_changed\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"chfn\" &&\n    regex(\"^changed\\\\s+user\\\\s+'\\\\w+'\", to_string($message.message)).matches == true\nthen\n    let fields = grok(\"^changed\\\\s+user\\\\s+'%{USERNAME:user_name}'\\\\s+information$\",\n    to_string($message.message));\n    set_fields(fields);\n    set_field(\"vendor_event_description\", \"Changed user information\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "lookup_table",
+        "version": "1"
+      },
+      "id": "f7c775fb-4746-4b25-a919-a1294321eaf1",
+      "data": {
+        "default_single_value_type": {
+          "@type": "string",
+          "@value": "STRING"
+        },
+        "cache_name": {
+          "@type": "string",
+          "@value": "773f5f58-6284-4c35-a7ba-928cb107c84e"
+        },
+        "name": {
+          "@type": "string",
+          "@value": "dns_reverse_lookup"
+        },
+        "default_multi_value_type": {
+          "@type": "string",
+          "@value": "NULL"
+        },
+        "default_multi_value": {
+          "@type": "string",
+          "@value": ""
+        },
+        "data_adapter_name": {
+          "@type": "string",
+          "@value": "b5387a1d-92ac-4811-831f-c87df34d9d16"
+        },
+        "_scope": {
+          "@type": "string",
+          "@value": "DEFAULT"
+        },
+        "title": {
+          "@type": "string",
+          "@value": "DNS Reverse Lookup"
+        },
+        "default_single_value": {
+          "@type": "string",
+          "@value": ""
+        },
+        "description": {
+          "@type": "string",
+          "@value": ""
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "eb2e70d2-cff1-43ac-a473-8395861dedb9",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "auth_log_extract_fields"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"auth_log_extract_fields\"\nwhen\n    has_field(\"filebeat_log_file\") &&\n    to_string($message.filebeat_log_file) == \"auth.log\"\nthen\n    let fields = grok(\"^%{DATA:event_created}\\\\s+%{HOSTNAME:event_source}\\\\s+(?:\\\\()?%{DATA:application_name}(?:\\\\))?(?:\\\\[%{POSINT:process_id}\\\\])?\\\\s*:\\\\s*%{GREEDYDATA:message}$\",\n    to_string($message.message));\n    set_fields(fields);\n    set_field(\"application_name\", lowercase(to_string($message.application_name)));\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "fb6f2178-e1f6-434a-83c7-2352cc4f743a",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "groupdel_shadow_group_removed"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"groupdel_shadow_group_removed\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"groupdel\" &&\n    regex(\"removed\\\\s+from\\\\s+/etc/gshadow\", to_string($message.message)).matches == true\nthen\n    let fields = grok(\"^group\\\\s+'%{USERNAME:vendor_group_name}'\\\\s+removed\\\\s+from\\\\s+/etc/gshadow$\",\n    to_string($message.message));\n    set_fields(fields);\n    set_field(\"vendor_event_description\", \"Shadow group removed\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "b4245f88-d6a3-43d4-ad3e-e5f1bd969c27",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "ssh_event_outcome"
+        },
+        "description": {
+          "@type": "string",
+          "@value": ""
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"ssh_event_outcome\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"sshd\" &&\n    has_field(\"vendor_event_description\")\nthen\n    let is_accepted = contains(to_string($message.vendor_event_description), \"Accepted\");\n    let outcomes = key_value(\"true=success false=failure\");\n    set_field(\"event_outcome\", to_string(outcomes.to_string(is_accepted)));\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "aa206775-d460-4514-b9c1-a7080b6ab67a",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "ssh_extract_fields"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"ssh_extract_fields\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"sshd\"\nthen\n    let fields = grok(\"^%{DATA:vendor_event_description}\\\\s+for\\\\s+(?:invalid\\\\s+user\\\\s+)?%{USERNAME:user_name}\\\\s+from\\\\s+%{IPV4:source_ip}\\\\s+port\\\\s+%{POSINT:source_port}\\\\s+ssh2(?:\\\\s*:\\\\s*)?(?:%{DATA:vendor_ssh_signature})?$\",\n    to_string($message.message));\n    set_fields(fields);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "lookup_adapter",
+        "version": "1"
+      },
+      "id": "b5387a1d-92ac-4811-831f-c87df34d9d16",
+      "data": {
+        "_scope": {
+          "@type": "string",
+          "@value": "DEFAULT"
+        },
+        "name": {
+          "@type": "string",
+          "@value": "dns_reverse_lookup_adapter"
+        },
+        "title": {
+          "@type": "string",
+          "@value": "DNS Reverse Lookup Adapter"
+        },
+        "description": {
+          "@type": "string",
+          "@value": ""
+        },
+        "configuration": {
+          "type": {
+            "@type": "string",
+            "@value": "dnslookup"
+          },
+          "lookup_type": {
+            "@type": "string",
+            "@value": "PTR"
+          },
+          "server_ips": {
+            "@type": "string",
+            "@value": "132.1.100.17, 10.1.102.18"
+          },
+          "request_timeout": {
+            "@type": "integer",
+            "@value": 10000
+          },
+          "cache_ttl_override_enabled": {
+            "@type": "boolean",
+            "@value": false
+          }
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "2e6d4583-c69d-4a30-914a-c5db3d370ee7",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "groupadd_shadow_group_added"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"groupadd_shadow_group_added\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"groupadd\" &&\n    regex(\"^group\\\\s+added\\\\s+to\\\\s+/etc/gshadow\\\\s*:\", to_string($message.message)).matches == true\nthen\n    let fields = grok(\"^group\\\\s+added\\\\s+to\\\\s+/etc/gshadow\\\\s*:\\\\s*name=%{USERNAME:vendor_group_name}$\",\n    to_string($message.message));\n    set_fields(fields);\n    set_field(\"vendor_event_description\", \"Shadow group added\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "lookup_cache",
+        "version": "1"
+      },
+      "id": "773f5f58-6284-4c35-a7ba-928cb107c84e",
+      "data": {
+        "_scope": {
+          "@type": "string",
+          "@value": "DEFAULT"
+        },
+        "name": {
+          "@type": "string",
+          "@value": "dns_reverse_lookup_cache"
+        },
+        "title": {
+          "@type": "string",
+          "@value": "DNS Reverse Lookup Cache"
+        },
+        "description": {
+          "@type": "string",
+          "@value": ""
+        },
+        "configuration": {
+          "type": {
+            "@type": "string",
+            "@value": "none"
+          }
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "a7ead7b3-c2d0-46c2-9ffa-2b4c18611447",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "passwd_password_changed"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"passwd_password_changed\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"passwd\" &&\n    regex(\"^password\\\\s+changed\\\\s+for\", to_string($message.message)).matches == true\nthen\n    let fields = grok(\"^password\\\\s+changed\\\\s+for\\\\s+%{USERNAME:user_name}$\",\n    to_string($message.message));\n    set_fields(fields);\n    set_field(\"vendor_event_description\", \"User password changed\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline",
+        "version": "1"
+      },
+      "id": "1ec58f48-1d3d-4369-b048-13432bab0fe4",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Linux Pipeline - System Fields"
+        },
+        "description": {
+          "@type": "string",
+          "@value": ""
+        },
+        "source": {
+          "@type": "string",
+          "@value": "pipeline \"Linux Pipeline - System Fields\"\nstage 0 match all\nrule \"auth_log_extract_fields\"\nstage 1 match pass\nrule \"pam_extract_fields\"\nstage 2 match pass\nrule \"ssh_extract_fields\"\nrule \"sudo_extract_fields\"\nrule \"useradd_user_created\"\nrule \"userdel_user_deleted\"\nrule \"ssh_access_control\"\nrule \"groupadd_group_created\"\nrule \"usermod_user_id_changed\"\nrule \"chfn_user_information_changed\"\nrule \"groupdel_shadow_group_removed\"\nrule \"passwd_password_changed\"\nrule \"chsh_user_shell_changed\"\nrule \"groupadd_shadow_group_added\"\nrule \"groupadd_group_added\"\nrule \"pam_auth_extract_fields\"\nstage 3 match pass\nrule \"ssh_vendor_credential_type\"\nrule \"sudo_event_outcome\"\nrule \"ssh_event_outcome\"\nrule \"ssh_source_hostname\"\nend"
+        },
+        "connected_streams": [
+          {
+            "@type": "string",
+            "@value": "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+          }
+        ]
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "d7c94cfc-9800-4e56-874d-09599f60f3e3",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "useradd_user_created"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"useradd_user_created\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"useradd\" &&\n    regex(\"^new\\\\s+user\\\\s*:\", to_string($message.message)).matches == true\nthen\n    let fields = grok(\"^new\\\\s+user\\\\s*:\\\\s*name=%{USERNAME:user_name}\\\\s*,\\\\s*UID=%{POSINT:user_id}\\\\s*,\\\\s*GID=%{POSINT:vendor_group_id}\\\\s*,\\\\s*home=%{DATA:vendor_user_home}\\\\s*,\\\\s*shell=%{DATA:vendor_user_shell}\\\\s*,\\\\s*from=%{DATA:vendor_tty}$\",\n    to_string($message.message));\n    set_fields(fields);\n    set_field(\"vendor_event_description\", \"User created\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "b77c2664-f2a7-48d6-8f64-bbee896165c9",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "groupadd_group_added"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"groupadd_group_added\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"groupadd\" &&\n    regex(\"^group\\\\s+added\\\\s+to\\\\s+/etc/group\\\\s*:\", to_string($message.message)).matches == true\nthen\n    let fields = grok(\"^group\\\\s+added\\\\s+to\\\\s+/etc/group\\\\s*:\\\\s*name=%{USERNAME:vendor_group_name}\\\\s*,\\\\s*GID=%{POSINT:vendor_group_id}$\",\n    to_string($message.message));\n    set_fields(fields);\n    set_field(\"vendor_event_description\", \"Group added\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "943f1962-e3c8-434e-ae57-d88fa9801793",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "pam_auth_extract_fields"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"pam_auth_extract_fields\"\nwhen\n    has_field(\"vendor_pam_function\") &&\n    to_string($message.vendor_pam_function) == \"auth\"\nthen\n    let fields = grok(\"^authentication\\\\s+%{WORD:event_outcome}\\\\s*;\\\\s*logname=%{DATA:vendor_pam_logname}\\\\s+uid=%{DATA:vendor_pam_uid}\\\\s+euid=%{DATA:vendor_pam_euid}\\\\s+tty=%{DATA:vendor_tty}\\\\s+ruser=%{DATA:source_user_name}\\\\s+rhost=%{DATA:source_ip}(?:\\\\s+user=%{GREEDYDATA:user_name})?$\",\n    to_string($message.message));\n    set_fields(fields);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "9579c88a-9115-49db-b45e-26b5b57139ce",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Linux Input Filebeat TCP"
+        },
+        "configuration": {
+          "tls_key_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "port": {
+            "@type": "integer",
+            "@value": 5044
+          },
+          "tls_enable": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 1048576
+          },
+          "tcp_keepalive": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "tls_client_auth_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "no_beats_prefix": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "tls_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "tls_client_auth": {
+            "@type": "string",
+            "@value": "disabled"
+          },
+          "charset_name": {
+            "@type": "string",
+            "@value": "UTF-8"
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 16
+          },
+          "tls_key_password": {
+            "@type": "string",
+            "@value": ""
+          }
+        },
+        "static_fields": {},
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog.plugins.beats.Beats2Input"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "extractors": []
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "050811c5-1186-43db-b90c-cf5fceea0005",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "chsh_user_shell_changed"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"chsh_user_shell_changed\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"chsh\" &&\n    regex(\"^changed\\\\s+user\\\\s+'\\\\w+'\\\\s+shell\", to_string($message.message)).matches == true\nthen\n    let fields = grok(\"^changed\\\\s+user\\\\s+'%{USERNAME:user_name}'\\\\s+shell\\\\s+to\\\\s+'%{DATA:vendor_user_shell}'$\",\n    to_string($message.message));\n    set_fields(fields);\n    set_field(\"vendor_event_description\", \"Changed user shell\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "42b333c8-7ebb-4e57-a721-20246271bb6d",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "userdel_user_deleted"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"userdel_user_deleted\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"userdel\" &&\n    regex(\"^delete\\\\s+user\", to_string($message.message)).matches == true\nthen\n    let fields = grok(\"^delete\\\\s+user\\\\s+'%{USERNAME:user_name}'$\",\n    to_string($message.message));\n    set_fields(fields);\n    set_field(\"vendor_event_description\", \"User deleted\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "66c6340d-c495-4de2-89b6-6050e7fb74ef",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "usermod_user_id_changed"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"usermod_user_id_changed\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"usermod\" &&\n    regex(\"^change\\\\s+user\\\\s+'\\\\w+'\\\\s+UID\\\\s+from\", to_string($message.message)).matches == true\nthen\n    let fields = grok(\"^change\\\\s+user\\\\s+'%{USERNAME:user_name}'\\\\s+UID\\\\s+from\\\\s+'%{POSINT:source_user_id}'\\\\s+to\\\\s+'%{POSINT:user_id}'$\",\n    to_string($message.message));\n    set_fields(fields);\n    set_field(\"vendor_event_description\", \"User ID changed\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "dashboard",
+        "version": "2"
+      },
+      "id": "4497e243-757d-4fb3-8ab6-2b812da871f0",
+      "data": {
+        "summary": {
+          "@type": "string",
+          "@value": ""
+        },
+        "search": {
+          "queries": [
+            {
+              "id": "489a7116-e384-4dcf-96ad-6a1306fa9ac2",
+              "timerange": {
+                "from": 300,
+                "type": "relative"
+              },
+              "filters": [],
+              "query": {
+                "type": "elasticsearch",
+                "query_string": ""
+              },
+              "search_types": [
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(_exists_:source)"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "dfca9e64-b7ef-4ca3-97a3-ca9cecf49409",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "card",
+                      "id": "Message Count",
+                      "field": "source"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "d85bdb74-7135-4ebe-a9b4-dbd7811a4e33",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(_exists_:source)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "card",
+                      "id": "Message Count",
+                      "field": "source"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "dfca9e64-b7ef-4ca3-97a3-ca9cecf49409",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:(sshd OR sudo)) AND (_exists_:vendor_event_description OR _exists_:process_command_line) AND (event_outcome:failure)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "8eed2993-ec2a-44e4-bd42-973572258a73",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:(sshd OR sudo)) AND (_exists_:vendor_event_description OR _exists_:process_command_line) AND (event_outcome:failure)"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "8eed2993-ec2a-44e4-bd42-973572258a73",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "7a9e5173-1d0f-4bef-881d-7527f931595f",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "_exists_:user_name"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "source",
+                        "user_name"
+                      ],
+                      "limit": 20,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "0704c7a4-2d06-424c-86d3-cb0c2d7a2224",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:useradd) AND (vendor_event_description:\"User created\")"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "f10732ef-bd21-4906-80b1-78794999ef43",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "123a413b-b9bb-487e-9775-386801098a9a",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:(groupadd OR useradd)) AND (vendor_event_description:\"Group created\")"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "14106cbb-b83b-432d-a1cc-7605b35f83b6",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "0e1b7971-af49-437d-94f0-1a37d9b236f4",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(_exists_:application_name)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": false,
+                  "row_groups": [
+                    {
+                      "type": "time",
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "interval": {
+                        "type": "auto",
+                        "scaling": 0.6666666666666666
+                      }
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "2d056f4d-9c91-4da1-a069-53437c1aad1e",
+                  "filters": [],
+                  "column_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "application_name"
+                      ],
+                      "limit": 30,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": ""
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "8c6c8fe0-dced-4279-8e87-bbbd03411e11",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:useradd) AND (vendor_event_description:\"User created\")"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "f10732ef-bd21-4906-80b1-78794999ef43",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(_exists_:source)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "source"
+                      ],
+                      "limit": 20,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "d0f421b7-270f-4a01-9e85-cbc300de5fb1",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:(success OR failure))"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": false,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "source"
+                      ],
+                      "limit": 20,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "c92444ef-61d4-42cb-8b47-d77b8a1da3a2",
+                  "filters": [],
+                  "column_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "event_outcome"
+                      ],
+                      "limit": 2,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:(groupadd OR useradd)) AND (vendor_event_description:\"Group created\")"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "14106cbb-b83b-432d-a1cc-7605b35f83b6",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(vendor_pam_function:auth) AND (event_outcome:failure)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "vendor_pam_service_name"
+                      ],
+                      "limit": 15,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "02c3e013-0ba5-46a1-9ea4-c7847f6da186",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                }
+              ]
+            },
+            {
+              "id": "4d0e1cc7-d107-4fbf-82cc-08c528d82eb0",
+              "timerange": {
+                "from": 300,
+                "type": "relative"
+              },
+              "filters": [],
+              "query": {
+                "type": "elasticsearch",
+                "query_string": ""
+              },
+              "search_types": [
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:failure)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Attempts",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "user_name"
+                      ],
+                      "limit": 10,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "b17f1cbe-d9f9-4a93-bbcf-60d1d8804327",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": [
+                    {
+                      "type": "series",
+                      "field": "count()",
+                      "direction": "Descending"
+                    }
+                  ]
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:failure)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "143cd703-7494-45d0-bfc1-9bfad0f35e57",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sshd) AND (_exists_:vendor_event_outcome)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "df6ae856-428c-45cc-9db3-8fc187ee6747",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:(success OR failure))"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": false,
+                  "row_groups": [
+                    {
+                      "type": "time",
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "interval": {
+                        "type": "auto",
+                        "scaling": 0.6666666666666666
+                      }
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "a7af6148-6e50-4a20-8c3d-9fa5764478eb",
+                  "filters": [],
+                  "column_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "event_outcome"
+                      ],
+                      "limit": 2,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:failure)"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "143cd703-7494-45d0-bfc1-9bfad0f35e57",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "4c052955-6374-4839-bd80-0e82549c4be3",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sshd) AND (_exists_:vendor_event_outcome)"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "df6ae856-428c-45cc-9db3-8fc187ee6747",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "a12b2b70-716c-4a7f-8886-cad743fa1b9c",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sshd) AND (_exists_:vendor_event_outcome_reason)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "vendor_event_outcome_reason",
+                        "user_name"
+                      ],
+                      "limit": 10,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "a5e8e637-eb05-4dfe-b817-ec66ad6587d7",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description)"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "17ee2355-3689-482e-bd13-5900e1a07930",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "8501ebf8-6624-4c57-afa9-9245b8ca15d8",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:success)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "891b18b7-4961-4aad-bbb5-e2cea93cf5e0",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "source"
+                      ],
+                      "limit": 10,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "94eb948a-6ff3-48ad-a25f-cbc0ba100370",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:success)"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "891b18b7-4961-4aad-bbb5-e2cea93cf5e0",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "e47a62d7-2865-4bf3-b5e6-bb6fbce975ef",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:failure)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Attempts",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "source_ip",
+                        "source_hostname"
+                      ],
+                      "limit": 10,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "ed1d30b4-e0e5-40fd-9063-3138c472f7fe",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": [
+                    {
+                      "type": "series",
+                      "field": "count()",
+                      "direction": "Descending"
+                    }
+                  ]
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "17ee2355-3689-482e-bd13-5900e1a07930",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:success)"
+                  },
+                  "name": null,
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "offset": 0,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "filter": null,
+                  "decorators": [],
+                  "type": "messages",
+                  "stream_categories": [],
+                  "id": "393539e4-c028-4c8d-aed4-7c98062946e6",
+                  "limit": 150,
+                  "filters": []
+                }
+              ]
+            },
+            {
+              "id": "e339159c-621d-4081-9388-06f899cf5be4",
+              "timerange": {
+                "from": 300,
+                "type": "relative"
+              },
+              "filters": [],
+              "query": {
+                "type": "elasticsearch",
+                "query_string": ""
+              },
+              "search_types": [
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sudo) AND (_exists_:process_command_line) AND (event_outcome:success)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "d155c394-4af6-4adf-ba47-acab5941d3c6",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sudo) AND (_exists_:process_command_line) AND (event_outcome:failure)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Failed Commands",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "source_user_name"
+                      ],
+                      "limit": 15,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "c5c67f91-b111-433b-bfe1-be66e067edf7",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sudo) AND (_exists_:process_command_line) AND (event_outcome:failure)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "819db8ca-7731-482b-9c8c-1cc4a9ee3c14",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sudo) AND (_exists_:process_command_line) AND (event_outcome:success)"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "d155c394-4af6-4adf-ba47-acab5941d3c6",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "18474ed1-0bbc-4e1d-a9b4-4b95a0996a3e",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sudo) AND (_exists_:vendor_sudo_error)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "vendor_sudo_error",
+                        "source_user_name",
+                        "user_name"
+                      ],
+                      "limit": 20,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "efe7ba17-1331-459f-83d0-cda880bf8de1",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sudo) AND (_exists_:process_command_line)"
+                  },
+                  "name": null,
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "offset": 0,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "filter": null,
+                  "decorators": [],
+                  "type": "messages",
+                  "stream_categories": [],
+                  "id": "ca52aed8-3ad2-417e-9039-abb43a93cb8b",
+                  "limit": 150,
+                  "filters": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sudo) AND (_exists_:process_command_line) AND (event_outcome:(success OR failure))"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": false,
+                  "row_groups": [
+                    {
+                      "type": "time",
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "interval": {
+                        "type": "auto",
+                        "scaling": 0.6666666666666666
+                      }
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "13a148d2-9f27-4dfe-af14-d0d91964d46e",
+                  "filters": [],
+                  "column_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "event_outcome"
+                      ],
+                      "limit": 2,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sudo) AND (_exists_:process_command_line) AND (_exists_:source_user_name)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "card",
+                      "id": "Message Count",
+                      "field": "source_user_name"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "40cf2b31-37ca-402d-a33e-f7887bc14d07",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sudo) AND (_exists_:process_command_line)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "ab0070c0-d8b1-4f1b-b228-b27e8d7ec3bf",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sudo) AND (_exists_:process_command_line)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "source"
+                      ],
+                      "limit": 20,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "7ca8c047-0f4a-4af6-9777-847271ea56cb",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sudo) AND (_exists_:process_command_line) AND (_exists_:source_user_name)"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "40cf2b31-37ca-402d-a33e-f7887bc14d07",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "card",
+                      "id": "Message Count",
+                      "field": "source_user_name"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "ba170f81-03a0-40c9-8383-9fa91526a69f",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sudo) AND (_exists_:process_command_line) AND (event_outcome:failure)"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "819db8ca-7731-482b-9c8c-1cc4a9ee3c14",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "ba0432b2-35f6-4dbe-8737-58f5e2825f42",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:sudo) AND (_exists_:process_command_line)"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "ab0070c0-d8b1-4f1b-b228-b27e8d7ec3bf",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "4e1d534c-6121-4fe7-a654-7e649c92946c",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                }
+              ]
+            },
+            {
+              "id": "768cb3f8-1c79-48b0-98d8-6b3ce75a5d37",
+              "timerange": {
+                "from": 300,
+                "type": "relative"
+              },
+              "filters": [],
+              "query": {
+                "type": "elasticsearch",
+                "query_string": ""
+              },
+              "search_types": [
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:(useradd OR userdel OR groupadd OR groupdel OR usermod OR groupmod OR passwd OR gpasswd OR chsh OR chfn)) AND (_exists_:user_name)"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "431c6baa-404a-45c3-9728-f806e66a53d9",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "card",
+                      "id": "Message Count",
+                      "field": "user_name"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "36ff5e10-4ece-49a4-81cc-d47ba0c62b71",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:(groupadd OR useradd)) AND (vendor_event_description:\"Group created\")"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "ed69e7f8-e29f-49f3-9755-5ff5a03e64d3",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:useradd) AND (vendor_event_description:\"User created\")"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "1f6a2169-c86b-4aae-99c7-6fdba17f96b1",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "b22daad0-e26c-478b-8f01-25097e6354ed",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:passwd) AND (vendor_event_description:\"User password changed\")"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "548dc661-a86c-4f48-b143-c8c0117579cf",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "eaa62d04-31df-4c47-a153-8c22c160d7e7",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:passwd) AND (vendor_event_description:\"User password changed\")"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "548dc661-a86c-4f48-b143-c8c0117579cf",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:(useradd OR userdel OR groupadd OR groupdel OR usermod OR groupmod OR passwd OR gpasswd OR chsh OR chfn)) AND (_exists_:user_name)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "source",
+                        "user_name"
+                      ],
+                      "limit": 10,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "59776ad0-626f-49fe-8dae-eec586138cee",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:(useradd OR userdel OR groupadd OR groupdel OR usermod OR groupmod OR passwd OR gpasswd OR chsh OR chfn)) AND (_exists_:user_name)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "card",
+                      "id": "Message Count",
+                      "field": "user_name"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "431c6baa-404a-45c3-9728-f806e66a53d9",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:(groupadd OR useradd)) AND (vendor_event_description:\"Group created\")"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "ed69e7f8-e29f-49f3-9755-5ff5a03e64d3",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "13588bc1-4a3e-4600-a77b-81b837c966cc",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:userdel) AND (vendor_event_description:\"User deleted\")"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "d143b9ab-65a2-4894-ba46-ca6200cc9a43",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "b21e279b-4662-41f9-b5e6-e4b530c64abb",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:userdel) AND (vendor_event_description:\"User deleted\")"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "d143b9ab-65a2-4894-ba46-ca6200cc9a43",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:(useradd OR userdel OR groupadd OR groupdel OR usermod OR passwd OR gpasswd OR chsh OR chfn)) AND (_exists_:vendor_event_description)"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "count()",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": false,
+                  "row_groups": [
+                    {
+                      "type": "time",
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "interval": {
+                        "type": "auto",
+                        "scaling": 0.6666666666666666
+                      }
+                    }
+                  ],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "8f63684f-e56b-4cc3-b8f6-e55ac154bf56",
+                  "filters": [],
+                  "column_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "vendor_event_description"
+                      ],
+                      "limit": 30,
+                      "skip_empty_values": false
+                    }
+                  ],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:(useradd OR userdel OR groupadd OR groupdel OR usermod OR groupmod OR gpasswd OR chsh OR chfn)) OR ((application_name:(passwd OR chsh)) AND (vendor_pam_module:pam_unix))"
+                  },
+                  "name": null,
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "offset": 0,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "filter": null,
+                  "decorators": [],
+                  "type": "messages",
+                  "stream_categories": [],
+                  "id": "554e2cc0-7159-453e-988d-3b145f9f083a",
+                  "limit": 150,
+                  "filters": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:groupdel) AND (vendor_event_description:\"Group removed\")"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "8e7f3738-67d2-4213-9745-c60b779ba977",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "894c2157-cbc9-4173-8c80-1041004cefd0",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:useradd) AND (vendor_event_description:\"User created\")"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "1f6a2169-c86b-4aae-99c7-6fdba17f96b1",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "(application_name:groupdel) AND (vendor_event_description:\"Group removed\")"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "Message Count",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "stream_categories": [],
+                  "id": "8e7f3738-67d2-4213-9745-c60b779ba977",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                }
+              ]
+            }
+          ],
+          "parameters": [],
+          "requires": {},
+          "owner": "adm.jribes",
+          "created_at": "2026-03-05T15:23:54.919Z"
+        },
+        "created_at": "2026-02-03T09:45:27.049Z",
+        "requires": {},
+        "state": {
+          "489a7116-e384-4dcf-96ad-6a1306fa9ac2": {
+            "selected_fields": null,
+            "static_message_list_id": null,
+            "titles": {
+              "tab": {
+                "title": "Global Overview"
+              },
+              "widget": {
+                "5e21fa83-1b40-4dd3-b041-feda6d3bf4c0": "Groups Created",
+                "b8832af3-1c4c-40ab-b6d8-c53311d2fc47": "Event Count by Source",
+                "21b6f87c-11aa-455b-ac9d-ff0d69a2f484": "Event Count",
+                "40dc2982-aa19-4290-bb60-b267ec082066": "Message Table",
+                "31e2849f-2113-43c4-8b1e-8481839720a5": "Top 10 Most Active Users by Source",
+                "a09d4df1-104a-4496-8d3d-7da3a81cd5bf": "SSH Authentication Outcomes by Source",
+                "48f93c6c-350e-4aa4-b68d-6bc8907239d5": "Authentication Failures",
+                "dc2270fb-9407-456b-8920-d6496bf5440f": "Users Created",
+                "7e15ebf2-a306-4403-b2e7-8d2496ecb39d": "PAM Authentication Failures by Application Name",
+                "669e9609-b264-447b-ae07-e104cea495e7": "Messages by Application Name Over Time",
+                "f7c30ccf-192f-4985-8e6a-7a7a02e50a78": "Hosts Reporting"
+              }
+            },
+            "widgets": [
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "NEUTRAL"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:useradd) AND (vendor_event_description:\"User created\")"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "dc2270fb-9407-456b-8920-d6496bf5440f",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "NEUTRAL"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:(groupadd OR useradd)) AND (vendor_event_description:\"Group created\")"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "5e21fa83-1b40-4dd3-b041-feda6d3bf4c0",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "card(source)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "HIGHER"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(_exists_:source)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "f7c30ccf-192f-4985-8e6a-7a7a02e50a78",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "pie",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 15,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "vendor_pam_service_name"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 15,
+                        "skip_empty_values": false
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": null,
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(vendor_pam_function:auth) AND (event_outcome:failure)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "7e15ebf2-a306-4403-b2e7-8d2496ecb39d",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": null,
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": ""
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "21b6f87c-11aa-455b-ac9d-ff0d69a2f484",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "LOWER"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:(sshd OR sudo)) AND (_exists_:vendor_event_description OR _exists_:process_command_line) AND (event_outcome:failure)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "48f93c6c-350e-4aa4-b68d-6bc8907239d5",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "table",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 20,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "source",
+                        "user_name"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 20,
+                        "skip_empty_values": false
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "pinned_columns": [],
+                    "show_row_numbers": true
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "_exists_:user_name"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "31e2849f-2113-43c4-8b1e-8481839720a5",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "bar",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 20,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "source"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 20
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "barmode": "group",
+                    "axis_type": "linear"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(_exists_:source)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "b8832af3-1c4c-40ab-b6d8-c53311d2fc47",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "bar",
+                  "units": {},
+                  "column_limit": 2,
+                  "event_annotation": false,
+                  "row_limit": 20,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "source"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 20
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [
+                    {
+                      "fields": [
+                        "event_outcome"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 2
+                      }
+                    }
+                  ],
+                  "visualization_config": {
+                    "barmode": "stack",
+                    "axis_type": "linear"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:(success OR failure))"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "a09d4df1-104a-4496-8d3d-7da3a81cd5bf",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "bar",
+                  "units": {},
+                  "column_limit": 30,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "type": "time",
+                      "config": {
+                        "interval": {
+                          "type": "auto",
+                          "scaling": 0.6666666666666666
+                        }
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [
+                    {
+                      "fields": [
+                        "application_name"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 30,
+                        "skip_empty_values": false
+                      }
+                    }
+                  ],
+                  "visualization_config": {
+                    "barmode": "stack",
+                    "axis_type": "linear"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(_exists_:application_name)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "669e9609-b264-447b-ae07-e104cea495e7",
+                "filters": [],
+                "description": null
+              }
+            ],
+            "widget_mapping": {
+              "5e21fa83-1b40-4dd3-b041-feda6d3bf4c0": [
+                "0e1b7971-af49-437d-94f0-1a37d9b236f4",
+                "14106cbb-b83b-432d-a1cc-7605b35f83b6"
+              ],
+              "b8832af3-1c4c-40ab-b6d8-c53311d2fc47": [
+                "d0f421b7-270f-4a01-9e85-cbc300de5fb1"
+              ],
+              "21b6f87c-11aa-455b-ac9d-ff0d69a2f484": [
+                "8c6c8fe0-dced-4279-8e87-bbbd03411e11"
+              ],
+              "31e2849f-2113-43c4-8b1e-8481839720a5": [
+                "0704c7a4-2d06-424c-86d3-cb0c2d7a2224"
+              ],
+              "a09d4df1-104a-4496-8d3d-7da3a81cd5bf": [
+                "c92444ef-61d4-42cb-8b47-d77b8a1da3a2"
+              ],
+              "48f93c6c-350e-4aa4-b68d-6bc8907239d5": [
+                "8eed2993-ec2a-44e4-bd42-973572258a73",
+                "7a9e5173-1d0f-4bef-881d-7527f931595f"
+              ],
+              "dc2270fb-9407-456b-8920-d6496bf5440f": [
+                "123a413b-b9bb-487e-9775-386801098a9a",
+                "f10732ef-bd21-4906-80b1-78794999ef43"
+              ],
+              "7e15ebf2-a306-4403-b2e7-8d2496ecb39d": [
+                "02c3e013-0ba5-46a1-9ea4-c7847f6da186"
+              ],
+              "669e9609-b264-447b-ae07-e104cea495e7": [
+                "2d056f4d-9c91-4da1-a069-53437c1aad1e"
+              ],
+              "f7c30ccf-192f-4985-8e6a-7a7a02e50a78": [
+                "dfca9e64-b7ef-4ca3-97a3-ca9cecf49409",
+                "d85bdb74-7135-4ebe-a9b4-dbd7811a4e33"
+              ]
+            },
+            "positions": {
+              "5e21fa83-1b40-4dd3-b041-feda6d3bf4c0": {
+                "col": 11,
+                "row": 1,
+                "height": 3,
+                "width": 2
+              },
+              "b8832af3-1c4c-40ab-b6d8-c53311d2fc47": {
+                "col": 1,
+                "row": 8,
+                "height": 4,
+                "width": 4
+              },
+              "21b6f87c-11aa-455b-ac9d-ff0d69a2f484": {
+                "col": 1,
+                "row": 1,
+                "height": 3,
+                "width": 3
+              },
+              "31e2849f-2113-43c4-8b1e-8481839720a5": {
+                "col": 9,
+                "row": 8,
+                "height": 4,
+                "width": 4
+              },
+              "a09d4df1-104a-4496-8d3d-7da3a81cd5bf": {
+                "col": 5,
+                "row": 8,
+                "height": 4,
+                "width": 4
+              },
+              "48f93c6c-350e-4aa4-b68d-6bc8907239d5": {
+                "col": 6,
+                "row": 1,
+                "height": 3,
+                "width": 3
+              },
+              "dc2270fb-9407-456b-8920-d6496bf5440f": {
+                "col": 9,
+                "row": 1,
+                "height": 3,
+                "width": 2
+              },
+              "7e15ebf2-a306-4403-b2e7-8d2496ecb39d": {
+                "col": 9,
+                "row": 4,
+                "height": 4,
+                "width": 4
+              },
+              "669e9609-b264-447b-ae07-e104cea495e7": {
+                "col": 1,
+                "row": 4,
+                "height": 4,
+                "width": 8
+              },
+              "f7c30ccf-192f-4985-8e6a-7a7a02e50a78": {
+                "col": 4,
+                "row": 1,
+                "height": 3,
+                "width": 2
+              }
+            },
+            "formatting": {
+              "highlighting": []
+            },
+            "display_mode_settings": {
+              "positions": {}
+            }
+          },
+          "4d0e1cc7-d107-4fbf-82cc-08c528d82eb0": {
+            "selected_fields": null,
+            "static_message_list_id": null,
+            "titles": {
+              "tab": {
+                "title": "SSH"
+              },
+              "widget": {
+                "f9a6d67d-4183-4fc3-94e0-9e29d29b2d71": "All Messages",
+                "453256ac-3214-40d9-afde-2168a22e775f": "Successful Logins by Most Recent",
+                "d441d9f0-fa29-4031-ae9e-8280e53e8545": "Successful Logins",
+                "95d7a3f4-a00e-47a4-b7d1-59efd653aac5": "Users Not Allowed by Access Control",
+                "2b12d47f-1c97-4b1d-b001-dc0d276a0f30": "Failed Logins",
+                "c6dd7ee9-5253-4c18-bc47-325d7166df3f": "Failed Logins by Username",
+                "ccb88f21-7598-4d6d-b569-b1de7b1a22b4": "Top 10 Access Control Event Outcome Reasons",
+                "eb66ff0a-d3f9-410e-9588-9c86c167491d": "Message Count",
+                "063cab6e-af65-4872-9c3c-7b90544c93cf": "Message Count by Source",
+                "0fa595e3-538f-4099-8774-d9fa5ecd856e": "Failed Logins by Source IP/Hostname",
+                "eea95cb6-4436-4d51-ae88-59a51e6e06eb": "Message Count by Source",
+                "c1cca820-146d-4161-9a98-942ea4ccfdea": "SSH Authentication Over Time"
+              }
+            },
+            "widgets": [
+              {
+                "config": {
+                  "visualization": "table",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 10,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "source"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 10
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "pinned_columns": [],
+                    "show_row_numbers": false
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "063cab6e-af65-4872-9c3c-7b90544c93cf",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "HIGHER"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:success)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "d441d9f0-fa29-4031-ae9e-8280e53e8545",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "table",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 10,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "source_ip",
+                        "source_hostname"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 10
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Attempts",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "pinned_columns": [],
+                    "show_row_numbers": false
+                  },
+                  "formatting_settings": null,
+                  "sort": [
+                    {
+                      "type": "series",
+                      "field": "count()",
+                      "direction": "Descending"
+                    }
+                  ]
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:failure)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "0fa595e3-538f-4099-8774-d9fa5ecd856e",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "NEUTRAL"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "eb66ff0a-d3f9-410e-9588-9c86c167491d",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "fields": [
+                    "timestamp",
+                    "source",
+                    "user_name",
+                    "source_ip",
+                    "source_hostname",
+                    "vendor_credential_type"
+                  ],
+                  "units": {},
+                  "show_message_row": false,
+                  "show_summary": false,
+                  "decorators": [],
+                  "sort": [
+                    {
+                      "type": "pivot",
+                      "field": "timestamp",
+                      "direction": "Descending"
+                    }
+                  ]
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:success)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "messages",
+                "stream_categories": [],
+                "id": "453256ac-3214-40d9-afde-2168a22e775f",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "table",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 10,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "user_name"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 10
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Attempts",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "pinned_columns": [],
+                    "show_row_numbers": false
+                  },
+                  "formatting_settings": null,
+                  "sort": [
+                    {
+                      "type": "series",
+                      "field": "count()",
+                      "direction": "Descending"
+                    }
+                  ]
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:failure)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "c6dd7ee9-5253-4c18-bc47-325d7166df3f",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "bar",
+                  "units": {},
+                  "column_limit": 2,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "type": "time",
+                      "config": {
+                        "interval": {
+                          "type": "auto",
+                          "scaling": 0.6666666666666666
+                        }
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [
+                    {
+                      "fields": [
+                        "event_outcome"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 2
+                      }
+                    }
+                  ],
+                  "visualization_config": {
+                    "barmode": "stack",
+                    "axis_type": "linear"
+                  },
+                  "formatting_settings": {
+                    "chart_colors": [
+                      {
+                        "field_name": "success",
+                        "chart_color": "#4478b3"
+                      },
+                      {
+                        "field_name": "failure",
+                        "chart_color": "#fd9e48"
+                      }
+                    ]
+                  },
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:(success OR failure))"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "c1cca820-146d-4161-9a98-942ea4ccfdea",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "LOWER"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sshd) AND (_exists_:vendor_event_outcome)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "95d7a3f4-a00e-47a4-b7d1-59efd653aac5",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "LOWER"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sshd) AND (_exists_:vendor_event_description) AND (event_outcome:failure)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "2b12d47f-1c97-4b1d-b001-dc0d276a0f30",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "table",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 10,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "vendor_event_outcome_reason",
+                        "user_name"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 10
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "pinned_columns": [],
+                    "show_row_numbers": true
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sshd) AND (_exists_:vendor_event_outcome_reason)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "ccb88f21-7598-4d6d-b569-b1de7b1a22b4",
+                "filters": [],
+                "description": null
+              }
+            ],
+            "widget_mapping": {
+              "453256ac-3214-40d9-afde-2168a22e775f": [
+                "393539e4-c028-4c8d-aed4-7c98062946e6"
+              ],
+              "d441d9f0-fa29-4031-ae9e-8280e53e8545": [
+                "e47a62d7-2865-4bf3-b5e6-bb6fbce975ef",
+                "891b18b7-4961-4aad-bbb5-e2cea93cf5e0"
+              ],
+              "95d7a3f4-a00e-47a4-b7d1-59efd653aac5": [
+                "a12b2b70-716c-4a7f-8886-cad743fa1b9c",
+                "df6ae856-428c-45cc-9db3-8fc187ee6747"
+              ],
+              "2b12d47f-1c97-4b1d-b001-dc0d276a0f30": [
+                "143cd703-7494-45d0-bfc1-9bfad0f35e57",
+                "4c052955-6374-4839-bd80-0e82549c4be3"
+              ],
+              "c6dd7ee9-5253-4c18-bc47-325d7166df3f": [
+                "b17f1cbe-d9f9-4a93-bbcf-60d1d8804327"
+              ],
+              "ccb88f21-7598-4d6d-b569-b1de7b1a22b4": [
+                "a5e8e637-eb05-4dfe-b817-ec66ad6587d7"
+              ],
+              "eb66ff0a-d3f9-410e-9588-9c86c167491d": [
+                "17ee2355-3689-482e-bd13-5900e1a07930",
+                "8501ebf8-6624-4c57-afa9-9245b8ca15d8"
+              ],
+              "063cab6e-af65-4872-9c3c-7b90544c93cf": [
+                "94eb948a-6ff3-48ad-a25f-cbc0ba100370"
+              ],
+              "0fa595e3-538f-4099-8774-d9fa5ecd856e": [
+                "ed1d30b4-e0e5-40fd-9063-3138c472f7fe"
+              ],
+              "c1cca820-146d-4161-9a98-942ea4ccfdea": [
+                "a7af6148-6e50-4a20-8c3d-9fa5764478eb"
+              ]
+            },
+            "positions": {
+              "453256ac-3214-40d9-afde-2168a22e775f": {
+                "col": 1,
+                "row": 9,
+                "height": 5,
+                "width": 6
+              },
+              "d441d9f0-fa29-4031-ae9e-8280e53e8545": {
+                "col": 4,
+                "row": 1,
+                "height": 4,
+                "width": 3
+              },
+              "95d7a3f4-a00e-47a4-b7d1-59efd653aac5": {
+                "col": 10,
+                "row": 1,
+                "height": 4,
+                "width": 3
+              },
+              "2b12d47f-1c97-4b1d-b001-dc0d276a0f30": {
+                "col": 7,
+                "row": 1,
+                "height": 4,
+                "width": 3
+              },
+              "c6dd7ee9-5253-4c18-bc47-325d7166df3f": {
+                "col": 7,
+                "row": 9,
+                "height": 5,
+                "width": 3
+              },
+              "ccb88f21-7598-4d6d-b569-b1de7b1a22b4": {
+                "col": 9,
+                "row": 5,
+                "height": 4,
+                "width": 4
+              },
+              "eb66ff0a-d3f9-410e-9588-9c86c167491d": {
+                "col": 1,
+                "row": 1,
+                "height": 4,
+                "width": 3
+              },
+              "063cab6e-af65-4872-9c3c-7b90544c93cf": {
+                "col": 1,
+                "row": 5,
+                "height": 4,
+                "width": 3
+              },
+              "0fa595e3-538f-4099-8774-d9fa5ecd856e": {
+                "col": 10,
+                "row": 9,
+                "height": 5,
+                "width": 3
+              },
+              "c1cca820-146d-4161-9a98-942ea4ccfdea": {
+                "col": 4,
+                "row": 5,
+                "height": 4,
+                "width": 5
+              }
+            },
+            "formatting": {
+              "highlighting": []
+            },
+            "display_mode_settings": {
+              "positions": {}
+            }
+          },
+          "e339159c-621d-4081-9388-06f899cf5be4": {
+            "selected_fields": null,
+            "static_message_list_id": null,
+            "titles": {
+              "tab": {
+                "title": "Sudo"
+              },
+              "widget": {
+                "11558c79-c077-44b1-a0d5-e1d65effd52e": "Successful Sudo Events",
+                "4454464a-f509-4414-852b-1fc5c757a1d3": "Top 20 Sudo Errors",
+                "a9a809d5-4865-42b9-9aa6-10a4a0508bd0": "Failed Sudo Events",
+                "50a49aeb-ddee-4f76-bd7e-358347032399": "Sudo Events by Most Recent",
+                "6243949a-111c-44d2-9a1d-8c0288d09967": "Sudo Events Over Time",
+                "98f6a0d6-8f5f-40e9-a3e6-c534a10d68af": "Message Count by Source",
+                "e867b32b-d1c0-4faf-8a32-d4da931c9ca1": "Unique Source Users",
+                "2427f92a-0997-481f-8129-ff085f2968bb": "Message Count",
+                "28e480ed-72e0-49ed-a5b0-1c06973e00f5": "Failed Sudo Events by Source User"
+              }
+            },
+            "widgets": [
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "HIGHER"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sudo) AND (_exists_:process_command_line) AND (event_outcome:success)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "11558c79-c077-44b1-a0d5-e1d65effd52e",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "card(source_user_name)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "NEUTRAL"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sudo) AND (_exists_:process_command_line) AND (_exists_:source_user_name)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "e867b32b-d1c0-4faf-8a32-d4da931c9ca1",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "table",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 20,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "source"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 20
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "pinned_columns": [],
+                    "show_row_numbers": true
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sudo) AND (_exists_:process_command_line)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "98f6a0d6-8f5f-40e9-a3e6-c534a10d68af",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "table",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 15,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "source_user_name"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 15
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Failed Commands",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "pinned_columns": [],
+                    "show_row_numbers": false
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sudo) AND (_exists_:process_command_line) AND (event_outcome:failure)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "28e480ed-72e0-49ed-a5b0-1c06973e00f5",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "LOWER"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sudo) AND (_exists_:process_command_line) AND (event_outcome:failure)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "a9a809d5-4865-42b9-9aa6-10a4a0508bd0",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "table",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 20,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "vendor_sudo_error",
+                        "source_user_name",
+                        "user_name"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 20
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "pinned_columns": [],
+                    "show_row_numbers": true
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sudo) AND (_exists_:vendor_sudo_error)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "4454464a-f509-4414-852b-1fc5c757a1d3",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "fields": [
+                    "timestamp",
+                    "source",
+                    "source_user_name",
+                    "user_name",
+                    "process_working_directory",
+                    "process_command_line",
+                    "vendor_sudo_error",
+                    "event_outcome"
+                  ],
+                  "units": {},
+                  "show_message_row": false,
+                  "show_summary": false,
+                  "decorators": [],
+                  "sort": [
+                    {
+                      "type": "pivot",
+                      "field": "timestamp",
+                      "direction": "Descending"
+                    }
+                  ]
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sudo) AND (_exists_:process_command_line)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "messages",
+                "stream_categories": [],
+                "id": "50a49aeb-ddee-4f76-bd7e-358347032399",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "NEUTRAL"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sudo) AND (_exists_:process_command_line)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "2427f92a-0997-481f-8129-ff085f2968bb",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "bar",
+                  "units": {},
+                  "column_limit": 2,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "type": "time",
+                      "config": {
+                        "interval": {
+                          "type": "auto",
+                          "scaling": 0.6666666666666666
+                        }
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [
+                    {
+                      "fields": [
+                        "event_outcome"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 2
+                      }
+                    }
+                  ],
+                  "visualization_config": {
+                    "barmode": "stack",
+                    "axis_type": "linear"
+                  },
+                  "formatting_settings": {
+                    "chart_colors": [
+                      {
+                        "field_name": "success",
+                        "chart_color": "#4478b3"
+                      }
+                    ]
+                  },
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:sudo) AND (_exists_:process_command_line) AND (event_outcome:(success OR failure))"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "6243949a-111c-44d2-9a1d-8c0288d09967",
+                "filters": [],
+                "description": null
+              }
+            ],
+            "widget_mapping": {
+              "11558c79-c077-44b1-a0d5-e1d65effd52e": [
+                "18474ed1-0bbc-4e1d-a9b4-4b95a0996a3e",
+                "d155c394-4af6-4adf-ba47-acab5941d3c6"
+              ],
+              "4454464a-f509-4414-852b-1fc5c757a1d3": [
+                "efe7ba17-1331-459f-83d0-cda880bf8de1"
+              ],
+              "a9a809d5-4865-42b9-9aa6-10a4a0508bd0": [
+                "819db8ca-7731-482b-9c8c-1cc4a9ee3c14",
+                "ba0432b2-35f6-4dbe-8737-58f5e2825f42"
+              ],
+              "50a49aeb-ddee-4f76-bd7e-358347032399": [
+                "ca52aed8-3ad2-417e-9039-abb43a93cb8b"
+              ],
+              "6243949a-111c-44d2-9a1d-8c0288d09967": [
+                "13a148d2-9f27-4dfe-af14-d0d91964d46e"
+              ],
+              "98f6a0d6-8f5f-40e9-a3e6-c534a10d68af": [
+                "7ca8c047-0f4a-4af6-9777-847271ea56cb"
+              ],
+              "e867b32b-d1c0-4faf-8a32-d4da931c9ca1": [
+                "ba170f81-03a0-40c9-8383-9fa91526a69f",
+                "40cf2b31-37ca-402d-a33e-f7887bc14d07"
+              ],
+              "2427f92a-0997-481f-8129-ff085f2968bb": [
+                "4e1d534c-6121-4fe7-a654-7e649c92946c",
+                "ab0070c0-d8b1-4f1b-b228-b27e8d7ec3bf"
+              ],
+              "28e480ed-72e0-49ed-a5b0-1c06973e00f5": [
+                "c5c67f91-b111-433b-bfe1-be66e067edf7"
+              ]
+            },
+            "positions": {
+              "11558c79-c077-44b1-a0d5-e1d65effd52e": {
+                "col": 7,
+                "row": 1,
+                "height": 4,
+                "width": 3
+              },
+              "4454464a-f509-4414-852b-1fc5c757a1d3": {
+                "col": 9,
+                "row": 5,
+                "height": 4,
+                "width": 4
+              },
+              "a9a809d5-4865-42b9-9aa6-10a4a0508bd0": {
+                "col": 10,
+                "row": 1,
+                "height": 4,
+                "width": 3
+              },
+              "50a49aeb-ddee-4f76-bd7e-358347032399": {
+                "col": 1,
+                "row": 9,
+                "height": 5,
+                "width": 9
+              },
+              "6243949a-111c-44d2-9a1d-8c0288d09967": {
+                "col": 4,
+                "row": 5,
+                "height": 4,
+                "width": 5
+              },
+              "98f6a0d6-8f5f-40e9-a3e6-c534a10d68af": {
+                "col": 1,
+                "row": 5,
+                "height": 4,
+                "width": 3
+              },
+              "e867b32b-d1c0-4faf-8a32-d4da931c9ca1": {
+                "col": 4,
+                "row": 1,
+                "height": 4,
+                "width": 3
+              },
+              "2427f92a-0997-481f-8129-ff085f2968bb": {
+                "col": 1,
+                "row": 1,
+                "height": 4,
+                "width": 3
+              },
+              "28e480ed-72e0-49ed-a5b0-1c06973e00f5": {
+                "col": 10,
+                "row": 9,
+                "height": 5,
+                "width": 3
+              }
+            },
+            "formatting": {
+              "highlighting": []
+            },
+            "display_mode_settings": {
+              "positions": {}
+            }
+          },
+          "768cb3f8-1c79-48b0-98d8-6b3ce75a5d37": {
+            "selected_fields": null,
+            "static_message_list_id": null,
+            "titles": {
+              "tab": {
+                "title": "Users and Groups"
+              },
+              "widget": {
+                "11e6eade-d0ec-4283-b6bb-705d2a10c5c2": "Top 10 Most Active Users by Source",
+                "6bf1bcc7-bd91-465a-8eed-9ae2e030c631": "User Passwords Changed",
+                "7c11db62-4e74-4953-839b-23dc32d82da1": "Top 10 Most Active Users by Source",
+                "52b0d60c-61de-4dec-9957-f55a92bc7b7c": "Unique Active Users",
+                "d48f1c9e-9472-4ed1-a411-3f04d0243f28": "Users Created",
+                "92cc4332-674a-46ec-86bd-90aa6be428d5": "Users Deleted",
+                "3af8119f-1432-4c5a-a065-57434dd96d18": "User and Group Activity Over Time",
+                "67e2f207-c4fc-40ec-b7ed-a39589c1ddaa": "Top 10 Most Active Users by Source",
+                "ad1ca87b-26e0-433c-a1cd-b72a3b58e3f4": "Log View",
+                "694ed038-62e8-4eb4-95c1-58c858b0e10f": "Groups Deleted",
+                "2d192079-abc6-49c9-93fc-af2d56ec5472": "Groups Created"
+              }
+            },
+            "widgets": [
+              {
+                "config": {
+                  "visualization": "table",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 10,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "source",
+                        "user_name"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 10
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "pinned_columns": [],
+                    "show_row_numbers": true
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:(useradd OR userdel OR groupadd OR groupdel OR usermod OR groupmod OR passwd OR gpasswd OR chsh OR chfn)) AND (_exists_:user_name)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "11e6eade-d0ec-4283-b6bb-705d2a10c5c2",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "NEUTRAL"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:userdel) AND (vendor_event_description:\"User deleted\")"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "92cc4332-674a-46ec-86bd-90aa6be428d5",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "NEUTRAL"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:(groupadd OR useradd)) AND (vendor_event_description:\"Group created\")"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "2d192079-abc6-49c9-93fc-af2d56ec5472",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "NEUTRAL"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:passwd) AND (vendor_event_description:\"User password changed\")"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "6bf1bcc7-bd91-465a-8eed-9ae2e030c631",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "card(user_name)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "NEUTRAL"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:(useradd OR userdel OR groupadd OR groupdel OR usermod OR groupmod OR passwd OR gpasswd OR chsh OR chfn)) AND (_exists_:user_name)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "52b0d60c-61de-4dec-9957-f55a92bc7b7c",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "bar",
+                  "units": {},
+                  "column_limit": 30,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "type": "time",
+                      "config": {
+                        "interval": {
+                          "type": "auto",
+                          "scaling": 0.6666666666666666
+                        }
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": null,
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [
+                    {
+                      "fields": [
+                        "vendor_event_description"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 30
+                      }
+                    }
+                  ],
+                  "visualization_config": {
+                    "barmode": "stack",
+                    "axis_type": "linear"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:(useradd OR userdel OR groupadd OR groupdel OR usermod OR passwd OR gpasswd OR chsh OR chfn)) AND (_exists_:vendor_event_description)"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "3af8119f-1432-4c5a-a065-57434dd96d18",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "NEUTRAL"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:groupdel) AND (vendor_event_description:\"Group removed\")"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "694ed038-62e8-4eb4-95c1-58c858b0e10f",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "visualization": "numeric",
+                  "units": {},
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count",
+                        "thresholds": []
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "NEUTRAL"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:useradd) AND (vendor_event_description:\"User created\")"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "aggregation",
+                "stream_categories": [],
+                "id": "d48f1c9e-9472-4ed1-a411-3f04d0243f28",
+                "filters": [],
+                "description": null
+              },
+              {
+                "config": {
+                  "fields": [
+                    "timestamp",
+                    "source",
+                    "application_name",
+                    "vendor_event_description",
+                    "user_name",
+                    "source_user_id",
+                    "user_id",
+                    "vendor_group_name",
+                    "vendor_group_id"
+                  ],
+                  "units": {},
+                  "show_message_row": true,
+                  "show_summary": true,
+                  "decorators": [],
+                  "sort": [
+                    {
+                      "type": "pivot",
+                      "field": "timestamp",
+                      "direction": "Descending"
+                    }
+                  ]
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "(application_name:(useradd OR userdel OR groupadd OR groupdel OR usermod OR groupmod OR gpasswd OR chsh OR chfn)) OR ((application_name:(passwd OR chsh)) AND (vendor_pam_module:pam_unix))"
+                },
+                "context": null,
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "streams": [
+                  "e294c20c-2e62-4960-b4fd-b77ac1cd0087"
+                ],
+                "filter": null,
+                "type": "messages",
+                "stream_categories": [],
+                "id": "ad1ca87b-26e0-433c-a1cd-b72a3b58e3f4",
+                "filters": [],
+                "description": null
+              }
+            ],
+            "widget_mapping": {
+              "11e6eade-d0ec-4283-b6bb-705d2a10c5c2": [
+                "59776ad0-626f-49fe-8dae-eec586138cee"
+              ],
+              "6bf1bcc7-bd91-465a-8eed-9ae2e030c631": [
+                "548dc661-a86c-4f48-b143-c8c0117579cf",
+                "eaa62d04-31df-4c47-a153-8c22c160d7e7"
+              ],
+              "52b0d60c-61de-4dec-9957-f55a92bc7b7c": [
+                "431c6baa-404a-45c3-9728-f806e66a53d9",
+                "36ff5e10-4ece-49a4-81cc-d47ba0c62b71"
+              ],
+              "d48f1c9e-9472-4ed1-a411-3f04d0243f28": [
+                "1f6a2169-c86b-4aae-99c7-6fdba17f96b1",
+                "b22daad0-e26c-478b-8f01-25097e6354ed"
+              ],
+              "92cc4332-674a-46ec-86bd-90aa6be428d5": [
+                "b21e279b-4662-41f9-b5e6-e4b530c64abb",
+                "d143b9ab-65a2-4894-ba46-ca6200cc9a43"
+              ],
+              "3af8119f-1432-4c5a-a065-57434dd96d18": [
+                "8f63684f-e56b-4cc3-b8f6-e55ac154bf56"
+              ],
+              "ad1ca87b-26e0-433c-a1cd-b72a3b58e3f4": [
+                "554e2cc0-7159-453e-988d-3b145f9f083a"
+              ],
+              "694ed038-62e8-4eb4-95c1-58c858b0e10f": [
+                "894c2157-cbc9-4173-8c80-1041004cefd0",
+                "8e7f3738-67d2-4213-9745-c60b779ba977"
+              ],
+              "2d192079-abc6-49c9-93fc-af2d56ec5472": [
+                "ed69e7f8-e29f-49f3-9755-5ff5a03e64d3",
+                "13588bc1-4a3e-4600-a77b-81b837c966cc"
+              ]
+            },
+            "positions": {
+              "11e6eade-d0ec-4283-b6bb-705d2a10c5c2": {
+                "col": 9,
+                "row": 5,
+                "height": 4,
+                "width": 4
+              },
+              "6bf1bcc7-bd91-465a-8eed-9ae2e030c631": {
+                "col": 7,
+                "row": 1,
+                "height": 4,
+                "width": 2
+              },
+              "52b0d60c-61de-4dec-9957-f55a92bc7b7c": {
+                "col": 1,
+                "row": 1,
+                "height": 4,
+                "width": 2
+              },
+              "d48f1c9e-9472-4ed1-a411-3f04d0243f28": {
+                "col": 3,
+                "row": 1,
+                "height": 4,
+                "width": 2
+              },
+              "92cc4332-674a-46ec-86bd-90aa6be428d5": {
+                "col": 5,
+                "row": 1,
+                "height": 4,
+                "width": 2
+              },
+              "3af8119f-1432-4c5a-a065-57434dd96d18": {
+                "col": 1,
+                "row": 5,
+                "height": 4,
+                "width": 8
+              },
+              "ad1ca87b-26e0-433c-a1cd-b72a3b58e3f4": {
+                "col": 1,
+                "row": 9,
+                "height": 5,
+                "width": "Infinity"
+              },
+              "694ed038-62e8-4eb4-95c1-58c858b0e10f": {
+                "col": 11,
+                "row": 1,
+                "height": 4,
+                "width": 2
+              },
+              "2d192079-abc6-49c9-93fc-af2d56ec5472": {
+                "col": 9,
+                "row": 1,
+                "height": 4,
+                "width": 2
+              }
+            },
+            "formatting": {
+              "highlighting": []
+            },
+            "display_mode_settings": {
+              "positions": {}
+            }
+          }
+        },
+        "properties": [],
+        "owner": "adm.jribes",
+        "title": {
+          "@type": "string",
+          "@value": "Linux System Overview"
+        },
+        "type": "DASHBOARD",
+        "description": {
+          "@type": "string",
+          "@value": ""
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "bca1012b-d7d4-436d-8c85-6c9784eba334",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "groupadd_group_created"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"groupadd_group_created\"\nwhen\n    has_field(\"application_name\") &&\n    (to_string($message.application_name) == \"groupadd\" ||\n    to_string($message.application_name) == \"useradd\") &&\n    regex(\"^new\\\\s+group\\\\s*:\", to_string($message.message)).matches == true\nthen\n    let fields = grok(\"^new\\\\s+group\\\\s*:\\\\s*name=%{USERNAME:vendor_group_name}\\\\s*,\\\\s*GID=%{POSINT:vendor_group_id}$\",\n    to_string($message.message));\n    set_fields(fields);\n    set_field(\"vendor_event_description\", \"Group created\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "56f80f09-0c6c-4183-ac23-0c0e8fec5cec",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "ssh_source_hostname"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"ssh_source_hostname\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"sshd\" &&\n    has_field(\"source_ip\")\nthen\n    let raw = to_string(lookup_value(\"dns_reverse_lookup\", $message.source_ip));\n    let without_dot = substring(raw, 0, length(raw) - 1);\n    let hostname = lowercase(without_dot);\n    set_field(\"source_hostname\", hostname);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "891e7d86-be25-4871-84b5-3e36ae31f4d2",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "sudo_extract_fields"
+        },
+        "description": null,
+        "source": {
+          "@type": "string",
+          "@value": "rule \"sudo_extract_fields\"\nwhen\n    has_field(\"application_name\") &&\n    to_string($message.application_name) == \"sudo\"\nthen\n    let fields = grok(\"^%{USERNAME:source_user_name}\\\\s*:\\\\s*(?:%{DATA:vendor_sudo_error})?(?:\\\\s*;\\\\s*)?(?:TTY=%{DATA:vendor_tty})?(?:\\\\s*;\\\\s*)?PWD=%{DATA:process_working_directory}\\\\s*;\\\\s*USER=%{USERNAME:user_name}\\\\s*;\\\\s*COMMAND=%{GREEDYDATA:process_command_line}$\",\n    to_string($message.message));\n    set_fields(fields);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=7.0.3+cf37d91"
+        }
+      ]
+    }
+  ]
+}
