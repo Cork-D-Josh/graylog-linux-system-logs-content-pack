@@ -18,7 +18,7 @@
 This content pack provides a set of **parsing**, **normalization**, and **enrichment** rules for Linux system logs in Graylog.
 It includes **pre-built dashboards** for real-time visibility into Linux system activity.
 
-It is an open-source alternative inspired by the [official Graylog Illuminate Linux System Content Pack](https://go2docs.graylog.org/illuminate-current/content_packs/linux_system_content_pack.html).
+It is an open-source alternative inspired by the [official Graylog Illuminate Linux System Logs Content Pack](https://go2docs.graylog.org/illuminate-current/content_packs/linux_system_content_pack.html).
 
 ---
 
