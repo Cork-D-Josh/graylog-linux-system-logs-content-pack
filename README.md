@@ -98,6 +98,7 @@ Parsing is handled via **Graylog Pipeline Rules** using Grok patterns, regex, an
 - [X] SSH — parsing & dashboard
 - [X] Sudo — parsing & dashboard
 - [ ] Users & Groups — parsing *(in progress)* & dashboard
+- [ ] Graylog 6.x compatibility
 
 ---
 
