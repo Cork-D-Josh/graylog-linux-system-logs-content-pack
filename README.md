@@ -90,6 +90,8 @@ Parsing is handled via **Graylog Pipeline Rules** using Grok patterns, regex, an
 | `vendor_sudo_error` | `user NOT in sudoers` | Sudo failure reason (Sudo) |
 | `vendor_event_description` | `User password changed` | Description of the action taken (Users & Groups) |
 
+> 📖 For the full list of extracted fields and their descriptions ([see documentation](docs/fields.md))
+
 ---
 
 ## 🗺️ Roadmap
