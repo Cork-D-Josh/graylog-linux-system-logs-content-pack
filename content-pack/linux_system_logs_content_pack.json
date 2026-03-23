@@ -3,7 +3,7 @@
   "id": "07dc596d-dce6-4f01-9c27-f72f57991973",
   "rev": 1,
   "name": "Linux System Logs",
-  "summary": "Open-source content pack for parsing, normalizing, and enriching Linux system logs.",
+  "summary": "Open-source content pack for parsing, normalizing, and enriching Linux system logs",
   "description": "",
   "vendor": "Joshua Ribes",
   "url": "https://github.com/Cork-D-Josh/graylog-linux-system-logs-content-pack",
