@@ -24,10 +24,12 @@ It is an open-source alternative inspired by the [official Graylog Illuminate Li
 
 ## 🖥️ Supported Distributions
 
-| Distribution | Tested Versions | To Be Tested |
-|---|---|---|
-| Ubuntu | 20.04 LTS (Focal Fossa), 22.04 LTS (Jammy Jellyfish) | 24.04 LTS (Noble Numbat) |
-| Debian | 11 (Bullseye), 12 (Bookworm) | 13 (Trixie) |
+| Distribution | Tested Versions |
+|---|---|
+| Ubuntu | 20.04 LTS (Focal Fossa), 22.04 LTS (Jammy Jellyfish), 24.04 LTS (Noble Numbat) |
+| Debian | 11 (Bullseye), 12 (Bookworm) |
+
+> ⚠️ **Debian 13 (Trixie)** support is planned but not yet tested.
 
 ---
 
@@ -35,8 +37,8 @@ It is an open-source alternative inspired by the [official Graylog Illuminate Li
 
 | Source | Covered Events |
 |---|---|
-| **SSH** | Accepted/failed authentications (password, public key) |
-| **Sudo** | Elevated commands, sudoers failures |
+| **SSH** | Authentications success / failure events (password, public key) |
+| **Sudo** | Elevated commands, success / failure events |
 | **PAM** | Sessions, authentications, PAM modules (pam_unix, pam_sss) |
 | **Users & Groups** | Creation, modification, deletion of users and groups |
 
@@ -54,8 +56,8 @@ Parsing is handled via **Graylog Pipeline Rules** using Grok patterns, regex, an
 
 - Graylog **>= 7.0.3** (built and tested on `7.0.3+cf37d91`)
 - **rsyslog** installed (required for `/var/log/auth.log` — may not be installed by default on Ubuntu / Debian)
-- **Filebeat 8.x** installed on monitored Linux hosts ([see configuration](docs/configuration/filebeat.md))
-- **SSH server** configured with `KbdInteractiveAuthentication no` ([see configuration](docs/configuration/sshd.md))
+- **Filebeat 8.x** installed on monitored Linux hosts ([see configuration](config/filebeat.md))
+- **SSH server** configured with `KbdInteractiveAuthentication no` ([see configuration](config/sshd.md))
 
 ---
 
@@ -92,10 +94,10 @@ Parsing is handled via **Graylog Pipeline Rules** using Grok patterns, regex, an
 
 ## 🗺️ Roadmap
 
-- [ ] Global Overview — parsing & dashboard
+- [ ] Global Overview — parsing & dashboard *(widget PAM in progress)*
 - [X] SSH — parsing & dashboard
 - [X] Sudo — parsing & dashboard
-- [ ] Users & Groups — parsing & dashboard
+- [ ] Users & Groups — parsing *(in progress)* & dashboard
 
 ---
 
