@@ -55,7 +55,7 @@ Parsing is handled via **Graylog Pipeline Rules** using Grok patterns, regex, an
 ## ⚙️ Requirements
 
 - **Graylog >= 7.0.3** (built and tested on `7.0.3+cf37d91`)
-- **rsyslog** installed (required for `/var/log/auth.log` — may not be installed by default on Ubuntu / Debian)
+- **rsyslog** installed (required for `/var/log/auth.log`, may not be installed by default on Ubuntu / Debian)
 - **Filebeat 8.x** installed on monitored Linux hosts ([see configuration](config/filebeat.md))
 - **SSH server** configured with `KbdInteractiveAuthentication no` ([see configuration](config/sshd.md))
 
