@@ -79,7 +79,7 @@ The goal is to reproduce the maximum number of fields from the official content 
 | `user_name` | `joshdev` | Name of the user account being affected |
 | `vendor_event_description` | `User created` | Description of the action that took place |
 | `vendor_group_id` | `1010` | ID of the group being affected |
-| `vendor_group_name` | `josh-admins` | Name of the group being affected |
+| `vendor_group_name` | `joshgroup` | Name of the group being affected |
 | `vendor_tty` | `/dev/pts/1` | Terminal from which the action was performed |
 | `vendor_user_home` | `/home/joshdev` | Home directory assigned to the user account |
 | `vendor_user_shell` | `/bin/bash` | Login shell assigned to the user account |
