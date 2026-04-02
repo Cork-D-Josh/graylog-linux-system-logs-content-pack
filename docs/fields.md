@@ -29,7 +29,7 @@ The goal is to reproduce the maximum number of fields from the official content 
 | `source_hostname` | `laptop-josh.home.local` | Hostname of the connecting client |
 | `source_port` | `51234` | Port used by the client to initiate the connection |
 | `user_name` | `josh` | Username used during authentication or associated with the session |
-| `vendor_credential_type` | `publickey` | Authentication method used (e.g. password, publickey) |
+| `vendor_credential_type` | `publickey` | Authentication method used (password, publickey) |
 | `vendor_event_description` | `Accepted publickey` | Description of what happened during the SSH event |
 | `vendor_event_outcome` | `not allowed` | Outcome as reported by the SSH daemon |
 | `vendor_event_outcome_reason` | `not listed in AllowUsers` | Reason provided by the SSH daemon to explain the outcome |
@@ -61,7 +61,7 @@ The goal is to reproduce the maximum number of fields from the official content 
 | `source_user_name` | `josh` | Remote user or user who initiated the session on behalf of another |
 | `user_name` | `joshadmin` | Account being authenticated or for which a session was opened or closed |
 | `vendor_pam_euid` | `0` | Effective user ID under which the process is running |
-| `vendor_pam_function` | `auth` | PAM function called during the event (e.g. auth, session, account) |
+| `vendor_pam_function` | `auth` | PAM function called during the event (auth, session, account) |
 | `vendor_pam_logname` | `josh` | Login name associated with the PAM event |
 | `vendor_pam_module` | `pam_unix` | PAM module that handled the authentication |
 | `vendor_pam_service_name` | `sshd` | Application or service that invoked PAM |
