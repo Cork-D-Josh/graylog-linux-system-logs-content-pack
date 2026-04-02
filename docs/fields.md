@@ -1,8 +1,8 @@
 # Message Fields
 
-This content pack is a free, open-source reimplementation that aims to reproduce the field parsing and normalization provided by the **official [Graylog Illuminate Linux System Logs Content Pack](https://go2docs.graylog.org/illuminate-current/content_packs/linux_system_content_pack.html)**, which requires a paid Graylog Enterprise/Security license.
+This content pack is a free, open-source reimplementation that aims to reproduce the field parsing and normalization provided by the [official Graylog Illuminate Linux System Logs Content Pack](https://go2docs.graylog.org/illuminate-current/content_packs/linux_system_content_pack.html), which requires a paid Graylog Enterprise/Security license.
 
-The goal is to reproduce the maximum number of fields from the official content pack — in particular those strictly required to rebuild the dashboard widgets included in the official content pack (Global, SSH, Sudo, Users & Groups overviews).
+The goal is to reproduce the maximum number of fields from the official content pack, in particular those strictly required to rebuild the dashboard widgets included in the official content pack (Global, SSH, Sudo, Users & Groups overviews).
 
 > **Note:** Not all fields from the official content pack are currently implemented. The tables below reflect only the fields that have been successfully reproduced in this free version.
 
