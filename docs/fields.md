@@ -1,7 +1,5 @@
 ## 📊 Message Fields
 
-This content pack is an open-source alternative inspired by the [official Graylog Illuminate Linux System Logs Content Pack](https://go2docs.graylog.org/illuminate-current/content_packs/linux_system_content_pack.html).
-
 The goal is to reproduce the maximum number of fields from the official content pack, in particular those strictly required to rebuild the dashboard widgets included in the official content pack (Global, SSH, Sudo, Users & Groups overviews).
 
 > ⚠️ Not all fields from the official content pack are currently implemented. The tables below reflect only the fields that have been successfully reproduced so far.
