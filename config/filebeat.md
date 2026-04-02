@@ -2,7 +2,7 @@
 
 **Tested with Filebeat 8.19.12** (current 8.x series version).
 
-#### Minimal Configuration for `filebeat.yml`:
+Minimal Configuration for `filebeat.yml`:
 
 ```yaml
 filebeat.inputs:
@@ -19,7 +19,7 @@ output.logstash:
   hosts: ["GRAYLOG_HOST:5044"]
 ```
 
-#### Multi-Node (Load Balancing):
+Multi-Node (Load Balancing):
 
 ```yaml
 output.logstash:
@@ -27,7 +27,7 @@ output.logstash:
   loadbalance: true
 ```
 
-#### Test Output Connectivity:
+Test Output Connectivity:
 
 ```bash
 sudo filebeat test output
