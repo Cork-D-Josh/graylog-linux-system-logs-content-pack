@@ -15,7 +15,7 @@ The goal is to reproduce the maximum number of fields from the official content 
 | `event_created` | `2025-06-28T05:39:00.000Z` | Timestamp extracted from the syslog header |
 | `event_source` | `srvjosh` | Hostname extracted from the syslog header |
 | `application_name` | `sshd` | Application or service name extracted from the syslog header |
-| `process_id` | `1337` | PID extracted from the syslog header |
+| `process_id` | `2806` | PID extracted from the syslog header |
 | `source` | `srvjosh` | Hostname or IP address of the system that generated the event |
 
 ---
@@ -25,7 +25,7 @@ The goal is to reproduce the maximum number of fields from the official content 
 | Field Name | Example Value | Description |
 |---|---|---|
 | `event_outcome` | `success` | Whether the SSH event succeeded or failed |
-| `source_ip` | `192.168.1.42` | IP address of the connecting client |
+| `source_ip` | `192.168.1.66` | IP address of the connecting client |
 | `source_hostname` | `laptop-josh.home.local` | Hostname of the connecting client |
 | `source_port` | `51234` | Port used by the client to initiate the connection |
 | `user_name` | `josh` | Username used during authentication or associated with the session |
@@ -56,7 +56,7 @@ The goal is to reproduce the maximum number of fields from the official content 
 | Field Name | Example Value | Description |
 |---|---|---|
 | `event_outcome` | `failure` | Whether the PAM authentication or session event succeeded or failed |
-| `source_ip` | `192.168.1.42` | IP address of the remote host that initiated the authentication attempt |
+| `source_ip` | `192.168.1.66` | IP address of the remote host that initiated the authentication attempt |
 | `source_hostname` | `laptop-josh.home.local` | Hostname of the remote host that initiated the authentication attempt |
 | `source_user_name` | `josh` | Remote user or user who initiated the session on behalf of another |
 | `user_name` | `joshadmin` | Account being authenticated or for which a session was opened or closed |
