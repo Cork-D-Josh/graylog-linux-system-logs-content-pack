@@ -12,10 +12,10 @@ The goal is to reproduce the maximum number of fields from the official content 
 
 | Field Name | Example Value | Description |
 |---|---|---|
-| `event_created` | `2025-03-25T10:08:00.000Z` | Timestamp extracted from the syslog header by the first stage pipeline rule |
-| `event_source` | `srvjosh` | Hostname extracted from the syslog header by the first stage pipeline rule |
-| `application_name` | `sshd` | Application or service name extracted from the syslog header by the first stage pipeline rule |
-| `process_id` | `1337` | PID extracted from the syslog header by the first stage pipeline rule |
+| `event_created` | `2025-06-28T05:39:00.000Z` | Timestamp extracted from the syslog header |
+| `event_source` | `srvjosh` | Hostname extracted from the syslog header |
+| `application_name` | `sshd` | Application or service name extracted from the syslog header |
+| `process_id` | `1337` | PID extracted from the syslog header |
 | `source` | `srvjosh` | Hostname or IP address of the system that generated the event |
 
 ---
