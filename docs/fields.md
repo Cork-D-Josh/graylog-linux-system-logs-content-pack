@@ -55,7 +55,6 @@ The goal is to reproduce the maximum number of fields from the official content 
 |---|---|---|
 | `event_outcome` | `failure` | Whether the PAM authentication or session event succeeded or failed |
 | `source_ip` | `192.168.1.66` | IP address of the remote host that initiated the authentication attempt |
-| `source_hostname` | `laptop-josh.home.local` | Hostname of the remote host that initiated the authentication attempt |
 | `source_user_name` | `josh` | Remote user or user who initiated the session on behalf of another |
 | `user_name` | `joshadmin` | Account being authenticated or for which a session was opened or closed |
 | `vendor_pam_euid` | `0` | Effective user ID under which the process is running |
