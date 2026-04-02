@@ -30,7 +30,7 @@ The goal is to reproduce the maximum number of fields from the official content 
 | `source_port` | `51234` | Port used by the client to initiate the connection |
 | `user_name` | `josh` | Username used during authentication or associated with the session |
 | `vendor_credential_type` | `publickey` | Authentication method used (e.g. password, publickey) |
-| `vendor_event_description` | `Accepted publickey` | Human-readable description of what happened during the SSH event |
+| `vendor_event_description` | `Accepted publickey` | Description of what happened during the SSH event |
 | `vendor_event_outcome` | `not allowed` | Outcome as reported by the SSH daemon |
 | `vendor_event_outcome_reason` | `not listed in AllowUsers` | Reason provided by the SSH daemon to explain the outcome |
 | `vendor_ssh_signature` | `ED25519 SHA256:abc123xyz...` | Fingerprint of the key or certificate used during authentication |
@@ -77,7 +77,7 @@ The goal is to reproduce the maximum number of fields from the official content 
 | `source_user_id` | `1001` | ID of the user performing the action, or the user ID before a change |
 | `user_id` | `1002` | ID of the user account being affected |
 | `user_name` | `joshdev` | Name of the user account being affected |
-| `vendor_event_description` | `User created` | Human-readable description of the action that took place |
+| `vendor_event_description` | `User created` | Description of the action that took place |
 | `vendor_group_id` | `1010` | ID of the group being affected |
 | `vendor_group_name` | `josh-admins` | Name of the group being affected |
 | `vendor_tty` | `/dev/pts/1` | Terminal from which the action was performed |
