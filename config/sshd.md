@@ -1,6 +1,6 @@
 ## 🔐 SSH Server Configuration
 
-To get clean SSH logs (`Accepted password` / `Failed password` only),
+To get clean SSH logs (`Accepted`/`Failed password` only),
 disable keyboard-interactive authentication in `/etc/ssh/sshd_config`:
 
 ```conf
