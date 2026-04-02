@@ -1,4 +1,4 @@
-## Message Fields
+## 📊 Message Fields
 
 This content pack is a free, open-source reimplementation that aims to reproduce the field parsing and normalization provided by the [official Graylog Illuminate Linux System Logs Content Pack](https://go2docs.graylog.org/illuminate-current/content_packs/linux_system_content_pack.html), which requires a paid Graylog Enterprise/Security license.
 
