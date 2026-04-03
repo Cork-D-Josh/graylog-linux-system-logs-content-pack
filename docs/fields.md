@@ -1,4 +1,4 @@
-## 📊 Message Fields
+## 📑 Message Fields
 
 The goal is to reproduce the maximum number of fields from the official content pack, in particular those strictly required to rebuild the dashboard widgets included in the official content pack (Global, SSH, Sudo, Users & Groups overviews).
 
